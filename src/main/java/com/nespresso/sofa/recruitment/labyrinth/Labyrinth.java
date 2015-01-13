@@ -10,6 +10,9 @@ import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
 
+import com.nespresso.sofa.recruitment.labyrinth.doors.AbstractDoor;
+import com.nespresso.sofa.recruitment.labyrinth.doors.DoorFactory;
+import com.nespresso.sofa.recruitment.labyrinth.doors.IDoor;
 import com.nespresso.sofa.recruitment.labyrinth.exceptions.ClosedDoorException;
 import com.nespresso.sofa.recruitment.labyrinth.exceptions.DoorAlreadyClosedException;
 import com.nespresso.sofa.recruitment.labyrinth.exceptions.IllegalMoveException;
@@ -28,7 +31,10 @@ import com.nespresso.sofa.recruitment.labyrinth.validators.LabyrinthNotPairValid
 public class Labyrinth implements Ilabyrinth
 {
 
-	final static LabyrinthTools labyrinthTools = new LabyrinthTools();
+	private final static LabyrinthTools labyrinthTools = new LabyrinthTools();
+	private final static List<IDoor> doors = new ArrayList<IDoor>();
+	private Walker walker;
+	
 	/**
 	 * Exemple : [A,[[B,SENSOR_GATE],[c,SIMPLE_GATE],...] B,[[D,SENSOR_GATE],[E,SIMPLE_GATE],...], ...]
 	 */
@@ -77,10 +83,12 @@ public class Labyrinth implements Ilabyrinth
 						final String sourceRoom = String.valueOf(room.charAt(0));
 						final String destinationRoom = String.valueOf(room.charAt(2));
 						final String gateType = String.valueOf(room.charAt(1));
-
-						populatRoomList(sourceRoom, destinationRoom, gateType);
-						populatRoomList(destinationRoom, sourceRoom, gateType);
-
+						
+						AbstractDoor door = DoorFactory.getDoor(gateType);
+						door.setFirstRoom(new Room(sourceRoom));
+						door.setSecondRoom(new Room(destinationRoom));
+						
+						doors.add(door);
 					}
 				}
 				else
@@ -88,7 +96,12 @@ public class Labyrinth implements Ilabyrinth
 					invalidPairRooms.append(StringUtils.isNotBlank(invalidPairRooms.toString()) ? ERROR_PAIR_ROOM_SEPARATOR + room
 							: room);
 				}
+				
 			}
+			/**
+			 * Initialisation du walker
+			 */
+			walker = new Walker();
 
 			if (StringUtils.isNotBlank(invalidPairRooms.toString()))
 			{
@@ -104,91 +117,31 @@ public class Labyrinth implements Ilabyrinth
 		}
 	}
 
-	/**
-	 * Enrichire la liste roomsList
-	 *
-	 * @param sourceRoom
-	 * @param destinationRoom
-	 * @param gateType
-	 */
-	private void populatRoomList(final String sourceRoom, final String destinationRoom, final String gateType)
-	{
-		if (StringUtils.isNotBlank(sourceRoom) && StringUtils.isNotBlank(destinationRoom) && StringUtils.isNotBlank(gateType))
-		{
-			if (roomsList.containsKey(sourceRoom))
-			{
-				if (!roomsList.get(sourceRoom).containsKey(destinationRoom))
-				{
-					roomsList.get(sourceRoom).put(destinationRoom, gateType);
-				}
-			}
-			else
-			{
-				final Map<String, String> destinationRooms = new HashMap<String, String>();
-				destinationRooms.put(destinationRoom, gateType);
-				roomsList.put(sourceRoom, destinationRooms);
-			}
-
-		}
-
-	}
 
 	@Override
 	public void popIn(final String room)
 	{
-		if (StringUtils.isNotBlank(room))
-		{
-			this.popInRoom = room;
+		if(StringUtils.isNotBlank(room)) {
+			walker.setCurrentRoom(new Room(room));
 		}
 	}
 
 	@Override
 	public void walkTo(final String room)
 	{
-		if (StringUtils.isNotBlank(room) && StringUtils.isNotBlank(popInRoom))
-		{
-			final Map<String, String> possibleMovement = roomsList.get(popInRoom);
-			if (possibleMovement.containsKey(room))
-			{
-				
-				if(!closedDoors.contains(popInRoom + room)){
-					
-					if (SENSOR_GATE_SEPARATOR.equals(possibleMovement.get(room)))
-					{
-						sensorTrace.append((StringUtils.isNotBlank(sensorTrace.toString()) ? ";" : "") + popInRoom + room);
-					}
-					lastDoor = popInRoom;
-					popInRoom = room;
-					
-				}else{
-					throw new ClosedDoorException("Porte " + popInRoom + room + " est fermé :(");
-				}
-			}
-			else
-			{
-				throw new IllegalMoveException("Impossible de passer à la chambre " + room + " à partir de " + popInRoom + " :(");
-			}
-		}
+
 	}
 
 	@Override
 	public void closeLastDoor()
 	{
-		if (closedDoors.contains(lastDoor + popInRoom) || closedDoors.contains(popInRoom + lastDoor))
-		{
-			throw new DoorAlreadyClosedException("Dernier porte déja fermé :(");
-		}
-		else
-		{
-			closedDoors.add(lastDoor + popInRoom);
-			closedDoors.add(popInRoom + lastDoor);
-		}
+
 	}
 
 	@Override
 	public String readSensors()
 	{
-		return sensorTrace.toString();
+		return "";
 	}
 
 }
