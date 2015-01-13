@@ -6,7 +6,7 @@ import static com.nespresso.sofa.recruitment.labyrinth.tools.LabyrinthConstants.
  * @author Ouadie LAHDIOUI <olahdioui@sqli.com, ouadiesoft@gmail.com>
  * 
  */
-public class DoorFactory extends AbstractDoor {
+public class DoorFactory {
 	
 	public static AbstractDoor getDoor(String code) {
 		

@@ -9,5 +9,6 @@ package com.nespresso.sofa.recruitment.labyrinth.doors;
  */
 public interface IDoor
 {
-	
+	public boolean thisIsYourCode();
+	public boolean canYouGoToThisRoom(String roomCode);
 }

@@ -1,6 +1,6 @@
 package com.nespresso.sofa.recruitment.labyrinth.doors;
 
-import com.nespresso.sofa.recruitment.labyrinth.Room;
+import com.nespresso.sofa.recruitment.labyrinth.rooms.Room;
 import com.nespresso.sofa.recruitment.labyrinth.tools.LabyrinthDoorStat;
 
 /**
@@ -25,20 +25,18 @@ public abstract class AbstractDoor implements IDoor
 	 */
 	private LabyrinthDoorStat state;
 	
-	public Room getFirstRoom() {
-		return firstRoom;
+	@Override
+	public boolean thisIsYourCode() {
+		return false;
 	}
-
-	public Room getSecondRoom() {
-		return secondRoom;
+	
+	@Override
+	public boolean canYouGoToThisRoom(String roomCode) {
+		return firstRoom.thisIsYou(roomCode) || secondRoom.thisIsYou(roomCode);
 	}
-
-	public LabyrinthDoorStat getState() {
-		return state;
-	}
-
-	public void setState(LabyrinthDoorStat state) {
-		this.state = state;
+	
+	public void close() {
+		this.state = LabyrinthDoorStat.CLOSE;
 	}
 
 	public void setFirstRoom(Room firstRoom) {
